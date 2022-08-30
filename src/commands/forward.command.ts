@@ -7,7 +7,7 @@ import { Authentication } from "../__shared/models/permissions.model";
 export const forward: Command = {
     permission: "team",
     requireArgs: true,
-    help: "The controlcommand for the ticket system",
+    help: "Command to forward a ticket to another team member",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         if(!msg.channel) return;
 
@@ -29,6 +29,6 @@ export const forward: Command = {
             fields: [{name: "User", value: `<@${(msg.channel as TextChannel).topic}>`},{name: "Forwarded by", value: msg.author.tag}]
         })]});
 
-        replySuccess(`an <@${user.id}> übergeben`, "\n", `Das Ticket`, msg.channel as TextChannel);
+        replySuccess(`has been forwarded to <@${user.id}>`, "\n", `The ticket`, msg.channel as TextChannel);
     }
 }

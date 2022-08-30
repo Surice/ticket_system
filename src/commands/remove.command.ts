@@ -6,7 +6,7 @@ import { deleteTicketChannel } from "../service/ticketTool.service";
 export const remove: Command = {
     permission: "team",
     requireArgs: false,
-    help: "The controlcommand for the ticket system",
+    help: "The Command to delete the ticket",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         deleteTicketChannel(msg.channel as TextChannel, perms, msg.author.tag);
     }

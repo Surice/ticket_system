@@ -8,11 +8,11 @@ import { Authentication } from "../__shared/models/permissions.model";
 export const add: Command = {
     permission: "team",
     requireArgs: true,
-    help: "The controlcommand for the ticket system",
+    help: "Command to add an user to the ticket",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         const userId = await addUserToTicketChannel(msg, args);
         if(!userId) return;
 
-        replySuccess("hinzugefügt", "\n", `<@${userId}>`, msg.channel as TextChannel);
+        replySuccess("has been added", "\n", `<@${userId}>`, msg.channel as TextChannel);
     }
 }

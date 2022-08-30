@@ -8,7 +8,7 @@ import { checkUserResponse } from "../__shared/service/response.service";
 export const setup: Command = {
     permission: "manager",
     requireArgs: false,
-    help: "The command to create a new ticket panel",
+    help: "The command to setup the bot configuration",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         let configs: GuildConfigs = JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString());
 

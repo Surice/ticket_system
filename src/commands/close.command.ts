@@ -8,12 +8,12 @@ import { supportClient } from "../index";
 export const close: Command = {
     permission: "team",
     requireArgs: false,
-    help: "The controlcommand for the ticket system",
+    help: "Command to close the ticket",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         const close = await closeTicketChannel(msg.channel as TextChannel, perms, msg.member?.displayName || "undefined", msg.reply);
 
         if (!close) {
-            replySuccess(`von ${msg.member?.displayName} als fertig gekennzeichnet!`, "\n\n*Bitte warte nun darauf, dass ein Teammitglied das Ticket schließt*", "Ticket", msg.channel as TextChannel).then(message => {
+            replySuccess(`has been signed as finished by ${msg.member?.displayName}!`, "\n\n*Please wait for a team member who will close the ticket*", "Ticket", msg.channel as TextChannel).then(message => {
                 message?.edit({
                     embeds: message.embeds,
                     components: [new MessageActionRow({
@@ -36,7 +36,7 @@ export const close: Command = {
         msg.reply({
             embeds: [new MessageEmbed({
                 color: '#34ad4c',
-                description: `**✅ Ticket wurde von ${msg.member?.displayName} geschlossen**`
+                description: `**✅ The Ticket has been closed by ${msg.member?.displayName}**`
             })],
             components: [new MessageActionRow({
                 components: [new MessageButton()

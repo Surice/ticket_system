@@ -66,11 +66,11 @@ export async function checkConfirmResponse(channel: TextChannel, author: User, q
             description: question,
             fields: [{
                 name: "Confirm ✅",
-                value: `Reagiere mit ✅ um die Angaben zu bestätigen.`,
+                value: `React with ✅ to confirm the request.`,
                 inline: true
             }, {
                 name: "Decline ❌",
-                value: `Reagiere mit ❌ um den Vorgang abzubrechen`,
+                value: `React with ❌ to cacel the process`,
                 inline: true
             }]
         })]

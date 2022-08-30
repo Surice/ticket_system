@@ -33,10 +33,10 @@ export function replyError(subject: string, reason: string, channel?: TextChanne
     channel.send({embeds: [embed]});
 }
 
-export async function replySuccess(subject: string, reason: string, Name: string, channel?: TextChannel): Promise<Message | undefined> {
+export async function replySuccess(subject: string, reason: string, name: string, channel?: TextChannel): Promise<Message | undefined> {
     let embed = new MessageEmbed()
         .setColor('#34ad4c')
-        .setDescription(`✅ **${name} wurde ${subject}**${(reason) ? " | " + reason : ''}`);
+        .setDescription(`✅ **${name} has been ${subject}**${(reason) ? " | " + reason : ''}`);
 
     if(!channel) return;
     return channel.send({embeds: [embed]});

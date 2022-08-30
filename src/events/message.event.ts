@@ -22,7 +22,6 @@ export async function message(msg: Message): Promise<void> {
     guildConfig: GuildConfig = setup[msg.member.guild.id];
 
     const prefix = (guildConfig?.prefix) ? guildConfig.prefix : supportPrefix;
-
     if(!msg.content.startsWith(prefix)) return;
 
 
@@ -34,14 +33,12 @@ export async function message(msg: Message): Promise<void> {
     let command: Command;
     try {
         command = (await require(`${__dirname}/../commands/${commandName}.command.ts`))[commandName];
-        info("Finished!", "command load");
     } catch(err) {
         replyError("command_not_found", "-", msg.channel as TextChannel);
         return;
     }
     if(!command) return;
 
-    info(JSON.stringify(command), "TEST");
     if(command.permission in auth != true) {
         replyError("Unathorized", "-", msg.channel as TextChannel);
         return;

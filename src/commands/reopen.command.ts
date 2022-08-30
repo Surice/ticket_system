@@ -6,7 +6,7 @@ import { repoenTicketChat } from "../service/ticketTool.service";
 export const reopen: Command = {
     permission: "team",
     requireArgs: false,
-    help: "The controlcommand for the ticket system",
+    help: "The command to reopen a ticket",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
         const reopened = await repoenTicketChat(msg.channel as TextChannel, perms, msg.author.tag);
         if(!reopened) return;
@@ -14,7 +14,7 @@ export const reopen: Command = {
         msg.reply({
             embeds: [new MessageEmbed({
                 color: '#34ad4c',
-                description: `**✅ Ticket wurde von ${msg.member?.displayName} erneut geöffnet**`
+                description: `**✅ The ticket has been reopened by ${msg.member?.displayName}**`
             })]
         })
     }

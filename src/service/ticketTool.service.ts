@@ -28,21 +28,21 @@ export async function createTicketMessage(
 
   const embed = new MessageEmbed()
     .setColor("#EA4630")
-    .setTitle("Herzlich Willkommen im Support!")
+    .setTitle("Welcome to the Ticket Support!")
     .setDescription((guildConfig.catefories) ?`
-            **Bitte befolge die Schritte um ein passendes Thema zu deinem Anliegen zu finden:**
+            **Please follow the steps to find the matching topic for your request:**
 
-            > - Wähle zuerst das passende Thema zu deiner Frage aus
-            > - Bestätige danach durch das Klicken auf "Ticket öffnen" deine Auswahl.
+            > - First select the right topic for your question in the dropdown
+            > - Then confirm your selection by clicking on "Open ticket".
 
 
-            *Bitte öffne keine Tickets ohne Grund und verwende immer das zutreffende Thema.*
+            *Please do not open tickets without a reason and always use the correct topic.*
         `:`
-        **Eröffne einfach ein Support Ticket um mit dem Team in Kontakt zu treten**
+        **Just open a support ticket to get in contact with the team**
         
-        *Bitte öffne keine Tickets ohne Grund oder aus Spaß!*`
+        *Please do not open tickets without reason or for fun!*`
     )
-    .setFooter(`${msg.guild?.name} X Anybot`, supportClient.user?.displayAvatarURL());
+    .setFooter(`${msg.guild?.name} x Anybot`, supportClient.user?.displayAvatarURL());
 
   const message = await channel.send({
     embeds: [embed],
@@ -104,7 +104,7 @@ export async function createTicketMessage(
         components: [
           {
             type: 2,
-            label: "Ticket öffnen",
+            label: "Open Ticket",
             emoji: "📩",
             customId: "TicketToolOpen",
             style: "SUCCESS",
