@@ -1,0 +1,29 @@
+{
+  "name": "dc_typescript_bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "start": "node ./lib/index.js",
+    "build": "tsc -p .",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" src/index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/cron": "^1.7.2",
+    "@types/node": "^14.14.31",
+    "@types/string-similarity": "^4.0.0",
+    "nodemon": "^2.0.7",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.2"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "cron": "^1.8.2",
+    "discord.js": "^13.0.1",
+    "jimp": "^0.16.1",
+    "string-similarity": "^4.0.4"
+  }
+}

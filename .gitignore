@@ -1,0 +1,6 @@
+node_modules
+lib
+data
+
+config.json
+setup.json
