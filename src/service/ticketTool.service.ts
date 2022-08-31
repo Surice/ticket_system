@@ -1,16 +1,28 @@
-import { GuildMember,Message,MessageActionRow,MessageButton,MessageEmbed,TextChannel,User,} from "discord.js";
-import {adminLog,replyError} from "../__shared/service/notification.service";
+import {
+  CommandInteraction,
+  GuildMember,
+  Message,
+  MessageActionRow,
+  MessageButton,
+  MessageEmbed,
+  TextChannel,
+  User,
+} from "discord.js";
+import { adminLog, replyError } from "../__shared/service/notification.service";
 import { construcSaveHead, generateSaveBody } from "./ticketSave.service";
 import { supportClient } from "../index";
 import { error, info } from "../__shared/service/logger";
 import { readFileSync, unlinkSync, writeFileSync } from "fs";
-import { GuildConfig, GuildConfigs } from "../__shared/models/guildConfigs.model";
+import {
+  GuildConfig,
+  GuildConfigs,
+} from "../__shared/models/guildConfigs.model";
 import { Authentication } from "../__shared/models/permissions.model";
 
 export async function createTicketMessage(
   msg: Message,
   content: string[],
-  categories: boolean,
+  categories: boolean
 ): Promise<void> {
   let channel: TextChannel = msg.mentions.channels.first() as TextChannel;
 
@@ -23,13 +35,17 @@ export async function createTicketMessage(
     channel = msg.channel as TextChannel;
   }
 
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
     guildConfig: GuildConfig = setup[msg.member?.guild.id || ""];
 
   const embed = new MessageEmbed()
     .setColor("#EA4630")
     .setTitle("Welcome to the Ticket Support!")
-    .setDescription((guildConfig.catefories) ?`
+    .setDescription(
+      guildConfig.catefories
+        ? `
             **Please follow the steps to find the matching topic for your request:**
 
             > - First select the right topic for your question in the dropdown
@@ -37,16 +53,21 @@ export async function createTicketMessage(
 
 
             *Please do not open tickets without a reason and always use the correct topic.*
-        `:`
+        `
+        : `
         **Just open a support ticket to get in contact with the team**
         
         *Please do not open tickets without reason or for fun!*`
     )
-    .setFooter(`${msg.guild?.name} x Anybot`, supportClient.user?.displayAvatarURL());
+    .setFooter(
+      `${msg.guild?.name} x Anybot`,
+      supportClient.user?.displayAvatarURL()
+    );
 
   const message = await channel.send({
     embeds: [embed],
-    components: [/*
+    components: [
+      /*
       new MessageActionRow({
         components: [
           {
@@ -118,17 +139,24 @@ export async function createTicketMessage(
   writeFileSync("./data/guildConfigs.json", JSON.stringify(setup));
 }
 
-export async function createTicketChannel(type: string, member: GuildMember): Promise<string | undefined> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString());
+export async function createTicketChannel(
+  type: string,
+  member: GuildMember
+): Promise<string | undefined> {
+  const setup: GuildConfigs = await JSON.parse(
+    readFileSync("./data/guildConfigs.json", "utf-8").toString()
+  );
   let guildConfig: GuildConfig = setup[member.guild.id || ""];
 
   guildConfig.ticketId++;
   writeFileSync("./data/guildConfigs.json", JSON.stringify(setup));
 
-
-  let mentions: string = guildConfig.teamRoles?.map(item => `<@${item}>`).join(' / ') || "teammember",
+  let mentions: string =
+      guildConfig.teamRoles?.map((item) => `<@${item}>`).join(" / ") ||
+      "teammember",
     ticketType: string = "ticket-" + guildConfig.ticketId,
-    embedDescription: string = "You are now in a private chat with the team, feel free to voice your concerns here.";
+    embedDescription: string =
+      "You are now in a private chat with the team, feel free to voice your concerns here.";
 
   switch (type) {
     case "TicketToolDonation":
@@ -170,7 +198,8 @@ export async function createTicketChannel(type: string, member: GuildMember): Pr
       break;
   }
 
-  return member.guild.channels.create(ticketType, {
+  return member.guild.channels
+    .create(ticketType, {
       type: "GUILD_TEXT",
       topic: member.user.id,
       parent: guildConfig.categorieId,
@@ -187,7 +216,6 @@ export async function createTicketChannel(type: string, member: GuildMember): Pr
         .setColor("#1f991d")
         .setTitle(`Support-Ticket for ${member.user.username}`)
         .setDescription(embedDescription);
-
 
       const closeBtn: MessageButton = new MessageButton()
         .setLabel("Close")
@@ -215,9 +243,16 @@ export async function createTicketChannel(type: string, member: GuildMember): Pr
     });
 }
 
-export async function closeTicketChannel(channel: TextChannel,perms: Authentication,modName: string, callback: any): Promise<boolean | undefined> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-  guildConfig: GuildConfig = setup[channel.guild.id || ""];
+export async function closeTicketChannel(
+  channel: TextChannel,
+  perms: Authentication,
+  modName: string,
+  callback: any
+): Promise<boolean | undefined> {
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
+    guildConfig: GuildConfig = setup[channel.guild.id || ""];
 
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
@@ -269,8 +304,10 @@ export async function deleteTicketChannel(
   perms: Authentication,
   moderator: string
 ): Promise<void> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-  guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
+    guildConfig: GuildConfig = setup[channel.guild.id || ""];
 
   if (!perms.manager) {
     return;
@@ -283,23 +320,22 @@ export async function deleteTicketChannel(
   });
 }
 
-export async function addUserToTicketChannel(
-  msg: Message,
-  content: string[]
-): Promise<string | undefined> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-  guildConfig: GuildConfig = setup[msg.guild?.id || ""];
+export async function addUserToTicketChannel(interaction: CommandInteraction,content: string[]): Promise<string | undefined> {
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
+    guildConfig: GuildConfig = setup[interaction.guild?.id || ""];
 
-  if ((msg.channel as TextChannel).parentId != guildConfig.categorieId)
-    return;
+  if ((interaction.channel as TextChannel).parentId != guildConfig.categorieId) return;
 
-  let userId = msg.mentions.users.first()?.id;
+  let userId = interaction.mentions.users.first()?.id;
 
   if (!userId) userId = content[0];
   try {
     let user = await supportClient.users.fetch(userId);
   } catch (err) {
-    replyError("User hinufügen",
+    replyError(
+      "User hinufügen",
       "member_not_found",
       msg.channel as TextChannel
     );
@@ -319,8 +355,10 @@ export async function saveTicketChat(
   channel: TextChannel,
   moderator: string
 ): Promise<void> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-  guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
+    guildConfig: GuildConfig = setup[channel.guild.id || ""];
 
   let formattedContributors: string = "",
     contributors: { [name: string]: { messages: number; tag: string } } = {};
@@ -350,8 +388,10 @@ export async function saveTicketChat(
 
   writeFileSync("./cache.html", save);
 
-  if(!guildConfig.log) return;
-  const replyChannel = (await supportClient.channels.fetch(guildConfig.log)) as TextChannel;
+  if (!guildConfig.log) return;
+  const replyChannel = (await supportClient.channels.fetch(
+    guildConfig.log
+  )) as TextChannel;
   let user: User | void = await supportClient.users
     .fetch(channel.topic as string)
     .catch((err: any) => {
@@ -405,8 +445,10 @@ export async function repoenTicketChat(
   perms: Authentication,
   moderator: string
 ): Promise<boolean | void> {
-  const setup: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-  guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const setup: GuildConfigs = await JSON.parse(
+      readFileSync("./data/guildConfigs.json", "utf-8").toString()
+    ),
+    guildConfig: GuildConfig = setup[channel.guild.id || ""];
 
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;

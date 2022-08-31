@@ -5,6 +5,7 @@ import { Command } from "../__shared/models/command.model";
 import { GuildConfig, GuildConfigs } from "../__shared/models/guildConfigs.model";
 import { Authentication } from "../__shared/models/permissions.model";
 import { authenticate } from "../__shared/service/authGuard.service";
+import { fetchGuildconfig } from "../__shared/service/basics.service";
 import { error, info } from "../__shared/service/logger";
 import { replyError } from "../__shared/service/notification.service";
 
@@ -15,11 +16,9 @@ export async function message(msg: Message): Promise<void> {
 
     const auth: Authentication = await authenticate(msg.author, msg.member);
     const commandAlasses: {[alias: string]: string} = JSON.parse(readFileSync('./data/commandAliasses.json', "utf-8").toString());
-
     info(JSON.stringify(auth), "permissions");
 
-    const setup: GuildConfigs = JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
-    guildConfig: GuildConfig = setup[msg.member.guild.id];
+    let guildConfig: GuildConfig = await fetchGuildconfig(msg.member.guild.id);
 
     const prefix = (guildConfig?.prefix) ? guildConfig.prefix : supportPrefix;
     if(!msg.content.startsWith(prefix)) return;

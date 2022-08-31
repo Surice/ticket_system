@@ -1,10 +1,10 @@
 interface Categories {}
 
 export interface GuildConfig {
+    ticketId: number | 0;
     teamRoles?: string[];
     managerRoles?: string[];
     log?: string;
-    ticketId: number | 0;
     messageId?: string;
     categorieId?: string;
     prefix?: string;
