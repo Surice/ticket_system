@@ -10,7 +10,7 @@ export const close: Command = {
     requireArgs: false,
     help: "Command to close the ticket",
     method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
-        const close = await closeTicketChannel(msg.channel as TextChannel, perms, msg.member?.displayName || "undefined", msg.reply);
+        const close = await closeTicketChannel(msg.channel as TextChannel, perms, msg.member?.displayName || "undefined", msg.reply, args.join(' '));
 
         if (!close) {
             replySuccess(`has been signed as finished by ${msg.member?.displayName}!`, "\n\n*Please wait for a team member who will close the ticket*", "Ticket", msg.channel as TextChannel).then(message => {

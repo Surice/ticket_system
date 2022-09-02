@@ -122,14 +122,14 @@ export async function createTicketMessage(
         ],
       }),*/
       new MessageActionRow({
-        components: [
+        components: [ new MessageButton(
           {
             type: 2,
             label: "Open Ticket",
             emoji: "📩",
             customId: "TicketToolOpen",
             style: "SUCCESS",
-          },
+          }),
         ],
       }),
     ],
@@ -253,7 +253,6 @@ export async function closeTicketChannel(
       readFileSync("./data/guildConfigs.json", "utf-8").toString()
     ),
     guildConfig: GuildConfig = setup[channel.guild.id || ""];
-
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
 
