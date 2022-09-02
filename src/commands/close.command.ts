@@ -1,19 +1,27 @@
-import { Message, MessageActionRow, MessageButton, MessageEmbed, TextChannel } from "discord.js";
+import { CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, TextChannel } from "discord.js";
 import { Command } from "../__shared/models/command.model";
 import { Authentication } from "../__shared/models/permissions.model";
 import { replySuccess } from "../__shared/service/notification.service";
 import { closeTicketChannel } from "../service/ticketTool.service";
-import { supportClient } from "../index";
+import { checkUserResponse } from "../__shared/service/basics.service";
 
 export const close: Command = {
     permission: "team",
     requireArgs: false,
     help: "Command to close the ticket",
-    method: async function main(msg: Message, args: string[], perms: Authentication): Promise<void> {
-        const close = await closeTicketChannel(msg.channel as TextChannel, perms, msg.member?.displayName || "undefined", msg.reply, args.join(' '));
+    method: async function main(interaction: CommandInteraction, perms: Authentication): Promise<void> {
+        let solution: string = "",
+            dropdown_used = false;
+        if(interaction.options.getString('solution')) solution = interaction.options.getString('solution') || "";
+        else {
+            dropdown_used = true;
+            solution = await checkUserResponse(interaction, "Please insert Ticket Solution") || "";
+        }
+        
+        const close = await closeTicketChannel(interaction.channel as TextChannel, perms, interaction.user.username, undefined, solution);
 
         if (!close) {
-            replySuccess(`has been signed as finished by ${msg.member?.displayName}!`, "\n\n*Please wait for a team member who will close the ticket*", "Ticket", msg.channel as TextChannel).then(message => {
+            replySuccess(`has been signed as finished by ${interaction.user.username}!`, "\n\n*Please wait for a team member who will close the ticket*", "Ticket", interaction).then(message => {
                 message?.edit({
                     embeds: message.embeds,
                     components: [new MessageActionRow({
@@ -27,16 +35,18 @@ export const close: Command = {
                 })
             });
 
-            let channelName = (msg.channel as TextChannel).name.split("-");
+            let channelName = (interaction.channel as TextChannel).name.split("-");
 
-            await (msg.channel as TextChannel).setName(`finished-${channelName[channelName.length - 1]}`).catch(console.error);
+            await (interaction.channel as TextChannel).setName(`finished-${channelName[channelName.length - 1]}`).catch(console.error);
             return;
         }
 
-        msg.reply({
+        if(dropdown_used) return;
+
+        interaction.reply({
             embeds: [new MessageEmbed({
                 color: '#34ad4c',
-                description: `**✅ The Ticket has been closed by ${msg.member?.displayName}**`
+                description: `**✅ The Ticket has been closed by ${interaction.user.username}** \n\n*Solution: ${solution}*`
             })],
             components: [new MessageActionRow({
                 components: [new MessageButton()
@@ -46,6 +56,6 @@ export const close: Command = {
                     .setCustomId("TicketTooldelBtnTicket")
                 ]
             })]
-        })
+        });
     }
 }

@@ -1,44 +1,24 @@
-import {
-  CommandInteraction,
-  GuildMember,
-  Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
-  TextChannel,
-  User,
-} from "discord.js";
-import { adminLog, replyError } from "../__shared/service/notification.service";
+import { CommandInteraction,GuildMember,Message,MessageActionRow,MessageButton,MessageEmbed,TextChannel,User } from "discord.js";
+import { adminLog, replyError, replySuccess } from "../__shared/service/notification.service";
 import { construcSaveHead, generateSaveBody } from "./ticketSave.service";
 import { supportClient } from "../index";
-import { error, info } from "../__shared/service/logger";
+import { error } from "../__shared/service/logger";
 import { readFileSync, unlinkSync, writeFileSync } from "fs";
 import {
   GuildConfig,
   GuildConfigs,
 } from "../__shared/models/guildConfigs.model";
 import { Authentication } from "../__shared/models/permissions.model";
+import { fetchGuildconfig, saveGuildConfig } from "../__shared/service/basics.service";
 
-export async function createTicketMessage(
-  msg: Message,
-  content: string[],
-  categories: boolean
-): Promise<void> {
-  let channel: TextChannel = msg.mentions.channels.first() as TextChannel;
+export async function createTicketMessage(interaction: CommandInteraction, categories: boolean): Promise<void> {
+  let channel: TextChannel = interaction.options.getChannel('channel') as TextChannel;
 
-  if (!channel) {
-    try {
-      channel = (await supportClient.channels.fetch(content[1])) as TextChannel;
-    } catch (err) {}
-  }
-  if (!channel) {
-    channel = msg.channel as TextChannel;
+  if (!channel || !channel.isText()) {
+    channel = interaction.channel as TextChannel;
   }
 
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[msg.member?.guild.id || ""];
+  const guildConfig: GuildConfig = await fetchGuildconfig(interaction.guildId || "");
 
   const embed = new MessageEmbed()
     .setColor("#EA4630")
@@ -59,10 +39,10 @@ export async function createTicketMessage(
         
         *Please do not open tickets without reason or for fun!*`
     )
-    .setFooter(
-      `${msg.guild?.name} x Anybot`,
-      supportClient.user?.displayAvatarURL()
-    );
+    .setFooter({
+      text: `${interaction.guild?.name} x Anybot`,
+      iconURL: supportClient.user?.displayAvatarURL()
+    });
 
   const message = await channel.send({
     embeds: [embed],
@@ -136,55 +116,54 @@ export async function createTicketMessage(
   });
 
   guildConfig.messageId = message.id;
-  writeFileSync("./data/guildConfigs.json", JSON.stringify(setup));
+  saveGuildConfig(guildConfig, interaction.guildId || "");
+
+  replySuccess("created", "", "Ticket panel", interaction);
 }
 
 export async function createTicketChannel(
   type: string,
   member: GuildMember
 ): Promise<string | undefined> {
-  const setup: GuildConfigs = await JSON.parse(
-    readFileSync("./data/guildConfigs.json", "utf-8").toString()
-  );
-  let guildConfig: GuildConfig = setup[member.guild.id || ""];
+  let guildConfig: GuildConfig = await fetchGuildconfig(member.guild.id);
 
   guildConfig.ticketId++;
-  writeFileSync("./data/guildConfigs.json", JSON.stringify(setup));
+  saveGuildConfig(guildConfig, member.guild.id);
 
   let mentions: string =
       guildConfig.teamRoles?.map((item) => `<@${item}>`).join(" / ") ||
       "teammember",
-    ticketType: string = "ticket-" + guildConfig.ticketId,
+    ticketType: string = "TCK-" + guildConfig.ticketId,
     embedDescription: string =
       "You are now in a private chat with the team, feel free to voice your concerns here.";
 
   switch (type) {
     case "TicketToolDonation":
       embedDescription = `Du befindest dich nun in einem privaten Chat mit dem Team, hier kannst du alle weiteren Details zu deiner Donation abklären.`;
-      ticketType = ticketType.replace("ticket", "Donation");
+      ticketType = ticketType.replace("TCK", "Donation");
       break;
     case "TicketToolRankVerify":
       embedDescription = `Du befindest dich nun in einem privaten Chat mit dem Serverteam von Rocketment, um deinen Rang zu bekommen sende uns bitte eine Nachricht in dieses Ticket mit folgenden Information:
             > - Deinen [Tracker Link](https://rocketleague.tracker.network/rocket-league/) \nDann werden wir dir so schnell wie möglich weiterhelfen können!`;
-      ticketType = ticketType.replace("ticket", "RL-Rank");
+      ticketType = ticketType.replace("TCK", "RL-Rank");
       break;
     case "TicketToolTeamComplaint":
       mentions =
         "/ <@&838121178941620231> / <@&962638957877821441> / <@&962639951009292318>";
       embedDescription = `Du befindest dich nun in einem privaten Chat mit der Teamleitung, hier kannst du eine Beschwerde einreichen.`;
-      ticketType = ticketType.replace("ticket", "Team-Complaint");
+      ticketType = ticketType.replace("TCK", "Team-Complaint");
       break;
     case "TicketToolGlobalQuestion":
       embedDescription = `Du befindest dich nun in einem privaten Chat mit dem Team, stelle hier gerne deine Frage.`;
-      ticketType = ticketType.replace("ticket", "Allgemein");
+      ticketType = ticketType.replace("TCK", "TCK");
       break;
     case "TicketToolUserReport":
       embedDescription = `Du befindest dich nun in einem privaten Chat mit dem Team, hier kannst du einen User melden.`;
-      ticketType = ticketType.replace("ticket", "user-melden");
+      ticketType = ticketType.replace("TCK", "user-melden");
       break;
     case "TicketToolOther":
       embedDescription = `Du befindest dich nun in einem privaten Chat mit dem Team, schildere hier gerne dein Anliegen.`;
-      ticketType = ticketType.replace("ticket", "Sonstiges");
+      ticketType = ticketType.replace("TCK", "Other");
       break;
 
     case "TicketToolTournamentQuestion":
@@ -247,12 +226,10 @@ export async function closeTicketChannel(
   channel: TextChannel,
   perms: Authentication,
   modName: string,
-  callback: any
+  callback: any,
+  solution: string
 ): Promise<boolean | undefined> {
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
 
@@ -275,6 +252,10 @@ export async function closeTicketChannel(
                 color: "#34ad4c",
                 description:
                   "Feel free to leave feedback about support or a team member on our server!",
+                fields: [{
+                  name: "Reason/Solution",
+                  value: solution
+                }]
               }),
             ],
           })
@@ -303,10 +284,7 @@ export async function deleteTicketChannel(
   perms: Authentication,
   moderator: string
 ): Promise<void> {
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
 
   if (!perms.manager) {
     return;
@@ -319,29 +297,26 @@ export async function deleteTicketChannel(
   });
 }
 
-export async function addUserToTicketChannel(interaction: CommandInteraction,content: string[]): Promise<string | undefined> {
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[interaction.guild?.id || ""];
+export async function addUserToTicketChannel(interaction: CommandInteraction): Promise<string | undefined> {
+  const guildConfig: GuildConfig = await fetchGuildconfig(interaction.guildId || "");
+  let user: User | undefined;
 
   if ((interaction.channel as TextChannel).parentId != guildConfig.categorieId) return;
 
-  let userId = interaction.mentions.users.first()?.id;
+  let userId = interaction.options.getUser('user')?.id;
 
-  if (!userId) userId = content[0];
   try {
-    let user = await supportClient.users.fetch(userId);
+    user = await supportClient.users.fetch(userId || "");
   } catch (err) {
     replyError(
       "User hinufügen",
       "member_not_found",
-      msg.channel as TextChannel
+      interaction.channel as TextChannel
     );
     return;
   }
 
-  await (msg.channel as TextChannel).permissionOverwrites.create(userId, {
+  await (interaction.channel as TextChannel).permissionOverwrites.create(user.id, {
     SEND_MESSAGES: true,
     READ_MESSAGE_HISTORY: true,
     VIEW_CHANNEL: true,
@@ -354,10 +329,7 @@ export async function saveTicketChat(
   channel: TextChannel,
   moderator: string
 ): Promise<void> {
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
 
   let formattedContributors: string = "",
     contributors: { [name: string]: { messages: number; tag: string } } = {};
@@ -424,7 +396,7 @@ export async function saveTicketChat(
       },
     ])
     .setColor("#34ad4c")
-    .setFooter(user.id);
+    .setFooter({text: user.id});
 
   replyChannel
     .send({
@@ -444,10 +416,7 @@ export async function repoenTicketChat(
   perms: Authentication,
   moderator: string
 ): Promise<boolean | void> {
-  const setup: GuildConfigs = await JSON.parse(
-      readFileSync("./data/guildConfigs.json", "utf-8").toString()
-    ),
-    guildConfig: GuildConfig = setup[channel.guild.id || ""];
+  const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
 
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
@@ -457,7 +426,7 @@ export async function repoenTicketChat(
     let channelName = channel.name.split("-");
 
     channel
-      .setName(`allgemein-${channelName[channelName.length - 1]}`)
+      .setName(`TCK-${channelName[channelName.length - 1]}`)
       .catch((err: any) => {});
 
     await channel.permissionOverwrites.create(permission.id, {

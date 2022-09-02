@@ -32,7 +32,7 @@ export async function handeCommand(interaction: CommandInteraction): Promise<voi
         interaction.reply(command.help);
     } else {
         try{
-            command.method(interaction, interaction.options.data, auth);
+            command.method(interaction, auth);
         } catch(err: any) {
             interaction.reply({content: "command broken", ephemeral: true});
             error(err as string);

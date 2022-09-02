@@ -9,10 +9,10 @@ export const add: Command = {
     permission: "team",
     requireArgs: true,
     help: "Command to add an user to the ticket",
-    method: async function main(interaction: CommandInteraction, args: string[], perms: Authentication): Promise<void> {
-        const userId = await addUserToTicketChannel(interaction, args);
+    method: async function main(interaction: CommandInteraction, perms: Authentication): Promise<void> {
+        const userId = await addUserToTicketChannel(interaction);
         if(!userId) return;
 
-        replySuccess("has been added", "\n", `<@${userId}>`, interaction.channel as TextChannel);
+        replySuccess("has been added", "\n", `<@${userId}>`, interaction);
     }
 }

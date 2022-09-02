@@ -1,5 +1,5 @@
-import { Collection, Guild, GuildMember, Message, MessageEmbed, MessageMentions, MessageReaction, Snowflake, TextChannel, User } from "discord.js";
-import { readFileSync } from "fs";
+import { ButtonInteraction, Collection, CommandInteraction, Guild, GuildMember, Interaction, Message, MessageActionRow, MessageButton, MessageEmbed, MessageReaction, Modal, ModalSubmitInteraction, Snowflake, TextChannel, TextInputComponent, User } from "discord.js";
+import { readFileSync, writeFileSync } from "fs";
 import { supportClient } from "../..";
 import { GuildConfig, GuildConfigs } from "../models/guildConfigs.model";
 import { error } from "./logger";
@@ -30,55 +30,43 @@ export async function fetchMember(memberId: string, guild: Guild, mentions?: Col
 }
 
 
-export async function checkUserResponse(channel: TextChannel, operator: string, embedData: { title: string, description: string }, checkFor?: string): Promise<Snowflake | undefined> {
+export async function checkUserResponse(interaction: ButtonInteraction | CommandInteraction, question: string): Promise<Snowflake | undefined> {
     let answer: string | undefined = await new Promise(async resolve => {
-        let botMessage = await channel.send({
-            embeds: [new MessageEmbed({
-                color: "ORANGE",
-                title: embedData.title,
-                description: embedData.description
-            })]
-        });
+        const modal = new Modal()
+            .setTitle("Ticket System")
+            .setCustomId(question.trim().replace(/ /g, '').toLocaleLowerCase())
+            .addComponents(new MessageActionRow({components: [new TextInputComponent({label: question, customId: "questionAnswer", style: 'SHORT'})]}));
 
-        let checkFunction = async (answerMsg: Message) => {
-            if (answerMsg.channel.id != channel.id) return;
-            if (answerMsg.author.id != operator) return;
+        await interaction.showModal(modal);
 
-            if (checkFor) {
-                switch (checkFor) {
-                    case "member":
-                        const checkMember = await answerMsg.guild?.members.fetch(answerMsg.content as Snowflake).catch(err => {});
-
-                        if (!checkMember) {
-                            replyError(embedData.title, "invalid_channel", undefined);
-                            return
-                        };
-                        break;
-
-                    case "channel":
-                        const checkChannel = await supportClient.channels.fetch(answerMsg.content).catch(err => {});
-
-                        if(!checkChannel) {
-                            replyError(embedData.title, "invalid_channel", undefined);
-                            return
-                        }
-                    default:
-                        break;
-                }
-            }
+        let checkFunction = async (popUpinteraction: ModalSubmitInteraction) => {
+            if (popUpinteraction.type != 'MODAL_SUBMIT') return;
+            if (popUpinteraction.customId != question.trim().replace(/ /g, '').toLocaleLowerCase()) return;
 
 
-            resolve(answerMsg.content);
+            resolve(popUpinteraction.fields.getTextInputValue('questionAnswer'));
 
-            botMessage.delete();
-            answerMsg.delete();
+            supportClient.removeListener("interactionCreate", checkFunction);
 
-            supportClient.removeListener("messageCreate", checkFunction);
+            popUpinteraction.reply({
+                embeds: [new MessageEmbed({
+                    color: '#34ad4c',
+                    description: `**✅ The Ticket has been closed by ${interaction.user.username}** \n\n*Solution: ${popUpinteraction.fields.getTextInputValue('questionAnswer')}*`
+                })],
+                components: [new MessageActionRow({
+                    components: [new MessageButton()
+                        .setLabel("Delete")
+                        .setEmoji("⛔")
+                        .setStyle("DANGER")
+                        .setCustomId("TicketTooldelBtnTicket")
+                    ]
+                })]
+            });
         };
 
-        supportClient.addListener("messageCreate", checkFunction);
+        supportClient.addListener("interactionCreate", checkFunction);
         setTimeout(() => {
-            supportClient.removeListener("messageCreate", checkFunction);
+            supportClient.removeListener("interactionCreate", checkFunction);
             resolve(undefined);
         }, 60000);
     });
@@ -136,11 +124,18 @@ export async function checkConfirmResponse(channel: TextChannel, author: User, q
 }
 
 export async function fetchGuildconfig(guildId: string): Promise<GuildConfig> {
-    const guildConfigurations: GuildConfigs = JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
+    const guildConfigurations: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
         guildConfig: GuildConfig = guildConfigurations[guildId];
 
     if(!guildConfig) guildConfigurations[guildId] = {
         ticketId: 0
     }
     return guildConfig;
+}
+
+export async function saveGuildConfig(guildConfig: GuildConfig, guildId: string): Promise<void> {
+    let guildConfigurations: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString());
+    guildConfigurations[guildId] = guildConfig;
+
+    writeFileSync('./data/guildConfigs.json', JSON.stringify(guildConfigurations));
 }

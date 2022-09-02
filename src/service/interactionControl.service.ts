@@ -16,6 +16,7 @@ import {
   createTicketChannel,
   deleteTicketChannel,
 } from "./ticketTool.service";
+import { checkUserResponse } from "../__shared/service/basics.service";
 
 let selectedData: { [userId: string]: string } = {};
 
@@ -59,7 +60,8 @@ export async function handleInteractionInput(
         interaction.channel as TextChannel,
         await authenticate(interaction.user, interaction.member as GuildMember),
         interaction.user.username,
-        interaction.reply
+        interaction.reply,
+        await checkUserResponse(interaction, "Solution") || "unknown"
       );
 
       if (!close) {

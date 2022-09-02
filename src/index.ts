@@ -36,4 +36,4 @@ supportClient.on('ready', () => {
 });
 
 supportClient.on('interactionCreate', interaction);
-supportClient.on('messageCreate', message);
+// supportClient.on('messageCreate', message);

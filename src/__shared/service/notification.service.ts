@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { Client, GuildMember, Message, MessageEmbed, PartialMessage, TextChannel, User, VoiceState } from "discord.js";
+import { Client, CommandInteraction, GuildMember, Interaction, Message, MessageEmbed, PartialMessage, TextChannel, User, VoiceState } from "discord.js";
 import { Setup } from '../models/setup.model';
 import { Config } from '../models/config.model';
 import { supportClient } from '../..';
@@ -33,13 +33,13 @@ export function replyError(subject: string, reason: string, channel?: TextChanne
     channel.send({embeds: [embed]});
 }
 
-export async function replySuccess(subject: string, reason: string, name: string, channel?: TextChannel): Promise<Message | undefined> {
+export async function replySuccess(subject: string, reason: string, name: string, interaction?: CommandInteraction): Promise<Message | undefined> {
     let embed = new MessageEmbed()
         .setColor('#34ad4c')
         .setDescription(`✅ **${name} has been ${subject}**${(reason) ? " | " + reason : ''}`);
 
-    if(!channel) return;
-    return channel.send({embeds: [embed]});
+    if(!interaction) return;
+    interaction.reply({embeds: [embed]});
 }
 
 export function supportNotification(oldState: VoiceState, newState: VoiceState): void {
