@@ -1,4 +1,4 @@
-import { CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, TextChannel } from "discord.js";
+import { CommandInteraction, MessageActionRow, MessageButton, MessageEmbed, ModalSubmitInteraction, TextChannel } from "discord.js";
 import { Command } from "../__shared/models/command.model";
 import { Authentication } from "../__shared/models/permissions.model";
 import { replySuccess } from "../__shared/service/notification.service";
@@ -10,13 +10,10 @@ export const close: Command = {
     requireArgs: false,
     help: "Command to close the ticket",
     method: async function main(interaction: CommandInteraction, perms: Authentication): Promise<void> {
-        let solution: string = "",
-            dropdown_used = false;
+        let solution: string = "";
+        
         if(interaction.options.getString('solution')) solution = interaction.options.getString('solution') || "";
-        else {
-            dropdown_used = true;
-            solution = await checkUserResponse(interaction, "Please insert Ticket Solution") || "";
-        }
+        else solution = await checkUserResponse(interaction, "Please insert Ticket Solution") || "";
         
         const close = await closeTicketChannel(interaction.channel as TextChannel, perms, interaction.user.username, undefined, solution);
 
@@ -40,8 +37,6 @@ export const close: Command = {
             await (interaction.channel as TextChannel).setName(`finished-${channelName[channelName.length - 1]}`).catch(console.error);
             return;
         }
-
-        if(dropdown_used) return;
 
         interaction.reply({
             embeds: [new MessageEmbed({

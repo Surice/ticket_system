@@ -7,7 +7,6 @@ export interface GuildConfig {
     log?: string;
     messageId?: string;
     categorieId?: string;
-    prefix?: string;
     catefories?: Categories
 }
 

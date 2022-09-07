@@ -40,7 +40,7 @@ export async function createTicketMessage(interaction: CommandInteraction, categ
         *Please do not open tickets without reason or for fun!*`
     )
     .setFooter({
-      text: `${interaction.guild?.name} x Anybot`,
+      text: `${interaction.guild?.name} x ${supportClient.user?.username}`,
       iconURL: supportClient.user?.displayAvatarURL()
     });
 

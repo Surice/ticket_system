@@ -56,13 +56,7 @@ export async function handleInteractionInput(
 
     case "closeBtnTicket":
     case "closeBtnTicketConfirm":
-      const close = await closeTicketChannel(
-        interaction.channel as TextChannel,
-        await authenticate(interaction.user, interaction.member as GuildMember),
-        interaction.user.username,
-        interaction.reply,
-        await checkUserResponse(interaction, "Solution") || "unknown"
-      );
+      const close = await closeTicketChannel(interaction.channel as TextChannel, await authenticate(interaction.user, interaction.member as GuildMember), interaction.user.username, interaction.reply, await checkUserResponse(interaction, "Solution") || "unknown");
 
       if (!close) {
         if (interaction.customId == "closeBtnTicketConfirm") {
@@ -106,30 +100,6 @@ export async function handleInteractionInput(
           });
         return;
       }
-
-      interaction
-        .reply({
-          embeds: [
-            new MessageEmbed({
-              color: "#34ad4c",
-              description: `**✅ The Ticket has been closed by ${interaction.user.username}**`,
-            }),
-          ],
-          components: [
-            new MessageActionRow({
-              components: [
-                new MessageButton()
-                  .setLabel("Delete")
-                  .setEmoji("⛔")
-                  .setStyle("DANGER")
-                  .setCustomId("TicketTooldelBtnTicket"),
-              ],
-            }),
-          ],
-        })
-        .catch((err) => {
-          error(err, "interaction reply");
-        });
 
       break;
 
