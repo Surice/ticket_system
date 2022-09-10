@@ -12,8 +12,8 @@ export async function fetchUser(userId: string): Promise<User> {
     return user as User;
 }
 
-export async function checkUserResponse(interaction: ButtonInteraction | CommandInteraction, question: string): Promise<string | undefined> {
-    let answer: string | undefined = await new Promise(async resolve => {
+export async function checkUserResponse(interaction: ButtonInteraction | CommandInteraction, question: string): Promise<{text: string, component: ModalSubmitInteraction} | undefined> {
+    let answer: {text: string, component: ModalSubmitInteraction} | undefined = await new Promise(async resolve => {
         const modal = new Modal()
             .setTitle("Ticket System")
             .setCustomId(question.trim().replace(/ /g, '').toLocaleLowerCase())
@@ -26,8 +26,7 @@ export async function checkUserResponse(interaction: ButtonInteraction | Command
             if (popUpInteraction.customId != question.trim().replace(/ /g, '').toLocaleLowerCase()) return;
 
 
-            resolve(popUpInteraction.fields.getTextInputValue('questionAnswer'));
-            popUpInteraction.deferUpdate();
+            resolve({text: popUpInteraction.fields.getTextInputValue('questionAnswer'), component: popUpInteraction});
             supportClient.removeListener("interactionCreate", checkFunction);
         };
 
@@ -37,7 +36,7 @@ export async function checkUserResponse(interaction: ButtonInteraction | Command
             resolve(undefined);
         }, 60000);
     });
-    return answer as Snowflake;
+    return answer;
 }
 
 

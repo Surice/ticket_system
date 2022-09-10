@@ -1,22 +1,19 @@
 import {
-  BaseMessageComponent,
   GuildMember,
   Interaction,
-  Message,
   MessageActionRow,
   MessageButton,
   MessageEmbed,
   TextChannel,
 } from "discord.js";
 import { authenticate } from "../__shared/service/authGuard.service";
-import { error } from "../__shared/service/logger";
-import { supportClient } from "../index";
 import {
   closeTicketChannel,
   createTicketChannel,
   deleteTicketChannel,
 } from "./ticketTool.service";
 import { checkUserResponse } from "../__shared/service/basics.service";
+import { info } from "../__shared/service/logger";
 
 let selectedData: { [userId: string]: string } = {};
 
@@ -56,22 +53,27 @@ export async function handleInteractionInput(
 
     case "closeBtnTicket":
     case "closeBtnTicketConfirm":
-      const close = await closeTicketChannel(interaction.channel as TextChannel, await authenticate(interaction.user, interaction.member as GuildMember), interaction.user.username, interaction.reply, await checkUserResponse(interaction, "Solution") || "unknown");
+      const perms =  await authenticate(interaction.user, interaction.member as GuildMember);
+      let response = await checkUserResponse(interaction, "Solution");
+      if(!response) return;
+
+      info(JSON.stringify(perms), "close tck");
+      const close = await closeTicketChannel(interaction.channel as TextChannel, perms, interaction.user.username, interaction.reply, response.text || "unknown");
 
       if (!close) {
         if (interaction.customId == "closeBtnTicketConfirm") {
-          interaction.reply({
+          response.component.reply({
             embeds: [
               new MessageEmbed({
                 color: "#ff0000",
-                description: `❌You are not allowed to close Tickets!❌ \n\nPlease wait for a team member who will close the ticket`,
+                description: `❌You are not allowed to close Tickets!❌ \n\nPlease wait until a team member who will close the ticket`,
               }),
             ],
           });
           return;
         }
 
-        interaction.reply({
+        response.component.reply({
           embeds: [
             new MessageEmbed({
               color: "#34ad4c",
@@ -100,7 +102,6 @@ export async function handleInteractionInput(
           });
         return;
       }
-
       break;
 
     case "delBtnTicket":
@@ -113,30 +114,30 @@ export async function handleInteractionInput(
 
     //   ALT für Dropdown
     case "Submit":
-      if (!interaction.member) return;
-      const channelId = await createTicketChannel(
-        selectedData[interaction.user.id]
-          ? selectedData[interaction.user.id]
-          : "none",
-        interaction.member as GuildMember
-      );
+      // if (!interaction.member) return;
+      // const channelId = await createTicketChannel(
+      //   selectedData[interaction.user.id]
+      //     ? selectedData[interaction.user.id]
+      //     : "none",
+      //   interaction.member as GuildMember
+      // );
 
-      if (!channelId) {
-        interaction.reply({
-          content:
-            "Du musst erst einen Grund auswählen, bevor du ein Ticket öffnen kannst!",
-          ephemeral: true,
-        });
+      // if (!channelId) {
+      //   interaction.reply({
+      //     content:
+      //       "Du musst erst einen Grund auswählen, bevor du ein Ticket öffnen kannst!",
+      //     ephemeral: true,
+      //   });
 
-        return;
-      }
+      //   return;
+      // }
 
-      interaction.reply({
-        content: `Ticket <#${channelId}> wurde für dich erstellt!`,
-        ephemeral: true,
-      });
+      // interaction.reply({
+      //   content: `Ticket <#${channelId}> wurde für dich erstellt!`,
+      //   ephemeral: true,
+      // });
 
-      delete selectedData[interaction.user.id];
+      // delete selectedData[interaction.user.id];
       break;
   }
 }

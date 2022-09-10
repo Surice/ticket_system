@@ -222,19 +222,20 @@ export async function createTicketChannel(
     });
 }
 
-export async function closeTicketChannel(
-  channel: TextChannel,
-  perms: Authentication,
-  modName: string,
-  callback: any,
-  solution: string
-): Promise<boolean | undefined> {
+export async function closeTicketChannel(channel: TextChannel,perms: Authentication,modName: string,callback: any,solution: string): Promise<boolean | undefined> {
   const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
 
+  let channelName = channel.name.split("-");
+
+  channel.setName(`closed-${channelName[channelName.length - 1]}`).catch((err: any) => {
+    error(err, "close channel rename");
+  });
+
+
   channel.permissionOverwrites.cache.forEach(async (permission: any) => {
-    if (permission.type != "member") return;
+    if (permission.type != "member") return;   
 
     await channel.permissionOverwrites
       .create(permission.id, {
@@ -244,8 +245,7 @@ export async function closeTicketChannel(
       })
       .then(async () => {
         const user = await supportClient.users.fetch(permission.id);
-        await user
-          .send({
+        await user.send({
             embeds: [
               new MessageEmbed({
                 title: `Your support ticket ${channel.name} has been closed!`,
@@ -267,14 +267,6 @@ export async function closeTicketChannel(
         error(err, "overwrite close channel perms");
       });
   });
-
-  let channelName = channel.name.split("-");
-
-  channel
-    .setName(`closed-${channelName[channelName.length - 1]}`)
-    .catch((err: any) => {
-      error(err, "close channel rename");
-    });
 
   return true;
 }
@@ -421,19 +413,19 @@ export async function repoenTicketChat(
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
 
+  let channelName = channel.name.split("-");
+  channel
+    .setName(`TCK-${channelName[channelName.length - 1]}`)
+    .catch((err: any) => {});
+
   channel.permissionOverwrites.cache.forEach(async (permission: any) => {
     if (permission.type != "member") return;
-    let channelName = channel.name.split("-");
 
-    channel
-      .setName(`TCK-${channelName[channelName.length - 1]}`)
-      .catch((err: any) => {});
-
-    await channel.permissionOverwrites.create(permission.id, {
+    await channel.permissionOverwrites.create(await supportClient.users.fetch(permission.id), {
       VIEW_CHANNEL: true,
       READ_MESSAGE_HISTORY: true,
       SEND_MESSAGES: true,
-    });
+    }).catch(err => error(err, `${permission.id} permissions`));
   });
 
   return true;

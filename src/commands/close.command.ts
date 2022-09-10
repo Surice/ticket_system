@@ -4,23 +4,30 @@ import { Authentication } from "../__shared/models/permissions.model";
 import { replySuccess } from "../__shared/service/notification.service";
 import { closeTicketChannel } from "../service/ticketTool.service";
 import { checkUserResponse } from "../__shared/service/basics.service";
+import { error, info } from "../__shared/service/logger";
 
 export const close: Command = {
     permission: "team",
     requireArgs: false,
     help: "Command to close the ticket",
-    method: async function main(interaction: CommandInteraction, perms: Authentication): Promise<void> {
+    method: async function main(interaction: CommandInteraction | ModalSubmitInteraction, perms: Authentication): Promise<void> {
         let solution: string = "";
         
-        if(interaction.options.getString('solution')) solution = interaction.options.getString('solution') || "";
-        else solution = await checkUserResponse(interaction, "Please insert Ticket Solution") || "";
+        if((interaction as CommandInteraction).options.getString('solution')) solution = (interaction as CommandInteraction).options.getString('solution') || "";
+        else {
+            let response: {text: string, component: ModalSubmitInteraction} | undefined = await checkUserResponse(interaction as CommandInteraction, "Please insert Ticket Solution");
+            if(!response) return;
+            solution = response.text;
+            interaction = response.component;
+        }
         
         const close = await closeTicketChannel(interaction.channel as TextChannel, perms, interaction.user.username, undefined, solution);
 
         if (!close) {
             replySuccess(`has been signed as finished by ${interaction.user.username}!`, "\n\n*Please wait for a team member who will close the ticket*", "Ticket", interaction).then(message => {
-                message?.edit({
-                    embeds: message.embeds,
+                if(!message) return;
+
+                interaction.editReply({
                     components: [new MessageActionRow({
                         components: [new MessageButton()
                             .setLabel("Close")
@@ -37,7 +44,6 @@ export const close: Command = {
             await (interaction.channel as TextChannel).setName(`finished-${channelName[channelName.length - 1]}`).catch(console.error);
             return;
         }
-
         interaction.reply({
             embeds: [new MessageEmbed({
                 color: '#34ad4c',
@@ -51,6 +57,6 @@ export const close: Command = {
                     .setCustomId("TicketTooldelBtnTicket")
                 ]
             })]
-        });
+        }).catch(err => error(err, "reply to ticket close"));
     }
 }
