@@ -19,7 +19,6 @@ const config: Config = JSON.parse(readFileSync('./config.json', "utf-8").toStrin
 export default config;
 
 import { Client, } from "discord.js";
-import { message } from "./events/message.event";
 import { interaction } from "./events/interaction.event";
 
 const supportClient: Client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_EMOJIS_AND_STICKERS"], partials: ['MESSAGE', 'REACTION']}),

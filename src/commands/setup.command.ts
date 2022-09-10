@@ -2,8 +2,9 @@ import { CommandInteraction, MessageEmbed, Role} from "discord.js";
 import { readFileSync, writeFileSync } from "fs";
 import { supportClient } from "..";
 import { Command } from "../__shared/models/command.model";
-import { GuildConfigs } from "../__shared/models/guildConfigs.model";
+import { GuildConfig, GuildConfigs } from "../__shared/models/guildConfigs.model";
 import { Authentication } from "../__shared/models/permissions.model";
+import { info } from "../__shared/service/logger";
 
 export const setup: Command = {
     permission: "manager",
@@ -32,22 +33,48 @@ export const setup: Command = {
 
             interaction.reply({embeds: [embed]});
         }else {
-            configs[interaction.guildId || ""] = {
+            let updates: string = "";
+            if(!configs[interaction.guildId as string]) configs[interaction.guildId as string] = {
                 ticketId: 0
             }
+            let gc: GuildConfig = configs[interaction.guildId as string];
 
-            if(interaction.options.getChannel('channel')) configs[interaction.guildId || ""].log = interaction.options.getChannel('channel')?.id;
-            if(interaction.options.getChannel('categorie')) configs[interaction.guildId || ""].categorieId = interaction.options.getChannel('categorie')?.id;
-            if(interaction.options.getMentionable('manager')) {
-                if(!configs[interaction.guildId || ""].managerRoles?.includes((interaction.options.getMentionable('manager') as Role).id)) configs[interaction.guildId || ""].managerRoles?.push((interaction.options.getMentionable('manager') as Role).id);
-                else  return;
+            console.log(interaction.options);
+
+            if(interaction.options.getChannel('log_channel')){
+                gc.log = interaction.options.getChannel('log_channel')?.id;
+                updates += " Log-Channel,";
             }
+            if(interaction.options.getChannel('ticket_categorie')) {
+                gc.categorieId = interaction.options.getChannel('ticket_categorie')?.id;
+                updates += " Ticket-Categorie,";
+            }
+            if(interaction.options.getMentionable('manager_roles')) {
+                let managerRole = interaction.options.getMentionable('manager_roles') as Role;
 
-            configs[interaction.guildId || ""] = {
-                ticketId: 0
+                if(!gc.managerRoles) gc.managerRoles = new Array();
+
+                info(`${gc.managerRoles?.includes(managerRole.id)}`, "role id check");
+
+                if(!gc.managerRoles?.includes(managerRole.id)) gc.managerRoles?.push(managerRole.id);
+                else  gc.managerRoles.splice(gc.managerRoles.indexOf(managerRole.id), 1);
+
+                updates += " Manager-Roles,";
+            }
+            if(interaction.options.getMentionable('supporter_roles')) {
+                let supporterRole = interaction.options.getMentionable('supporter_roles') as Role;
+
+                if(!gc.teamRoles) gc.teamRoles = new Array();
+
+                if(!gc.teamRoles?.includes(supporterRole.id)) gc.teamRoles?.push(supporterRole.id);
+                else  gc.teamRoles.splice(gc.teamRoles.indexOf(supporterRole.id), 1);
+
+                updates += " Supporter-Roles,";
             }
 
             writeFileSync('./data/guildConfigs.json', JSON.stringify(configs));
+
+            interaction.reply(`Successfully updatet${updates}!`);
         }
     }
 }
