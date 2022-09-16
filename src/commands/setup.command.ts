@@ -72,7 +72,7 @@ export const setup: Command = {
                 updates += " Supporter-Roles,";
             }
 
-            writeFileSync(`/data/guildConfigs.json`, JSON.stringify(configs));
+            writeFileSync(`${__dirname}/../../data/guildConfigs.json`, JSON.stringify(configs));
 
             interaction.reply(`Successfully updatet${updates}!`);
         }
