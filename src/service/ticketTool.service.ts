@@ -3,13 +3,13 @@ import { adminLog, replyError, replySuccess } from "../__shared/service/notifica
 import { construcSaveHead, generateSaveBody } from "./ticketSave.service";
 import { supportClient } from "../index";
 import { error } from "../__shared/service/logger";
-import { readFileSync, unlinkSync, writeFileSync } from "fs";
+import { unlinkSync, writeFileSync } from "fs";
 import {
   GuildConfig,
-  GuildConfigs,
 } from "../__shared/models/guildConfigs.model";
 import { Authentication } from "../__shared/models/permissions.model";
 import { fetchGuildconfig, saveGuildConfig } from "../__shared/service/basics.service";
+import { info } from "console";
 
 export async function createTicketMessage(interaction: CommandInteraction, categories: boolean): Promise<void> {
   let channel: TextChannel = interaction.options.getChannel('channel') as TextChannel;
@@ -180,7 +180,7 @@ export async function createTicketChannel(
   return member.guild.channels
     .create(ticketType, {
       type: "GUILD_TEXT",
-      topic: member.user.id,
+      topic: `{"id":"${member.user.id}","reason":""}`,
       parent: guildConfig.categorieId,
       reason: "Ticket-Tool",
     })
@@ -222,7 +222,7 @@ export async function createTicketChannel(
     });
 }
 
-export async function closeTicketChannel(channel: TextChannel,perms: Authentication,modName: string,callback: any,solution: string): Promise<boolean | undefined> {
+export async function closeTicketChannel(channel: TextChannel,perms: Authentication,modName: string,callback: any, solution: string): Promise<boolean | undefined> {
   const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
   if (!perms.team) return;
   if (channel.parentId != guildConfig.categorieId) return;
@@ -232,6 +232,9 @@ export async function closeTicketChannel(channel: TextChannel,perms: Authenticat
   channel.setName(`closed-${channelName[channelName.length - 1]}`).catch((err: any) => {
     error(err, "close channel rename");
   });
+  let topic = JSON.parse(channel.topic as string);
+  topic.reason = solution;
+  await channel.setTopic(JSON.stringify(topic));
 
 
   channel.permissionOverwrites.cache.forEach(async (permission: any) => {
@@ -274,7 +277,7 @@ export async function closeTicketChannel(channel: TextChannel,perms: Authenticat
 export async function deleteTicketChannel(
   channel: TextChannel,
   perms: Authentication,
-  moderator: string
+  moderator: string,
 ): Promise<void> {
   const guildConfig: GuildConfig = await fetchGuildconfig(channel.guild.id);
 
@@ -356,7 +359,7 @@ export async function saveTicketChat(
     guildConfig.log
   )) as TextChannel;
   let user: User | void = await supportClient.users
-    .fetch(channel.topic as string)
+    .fetch(JSON.parse(channel.topic as string).id)
     .catch((err: any) => {
       adminLog(supportClient, err, `fetching User from TCK ${channel.name}`);
     });
@@ -377,7 +380,10 @@ export async function saveTicketChat(
   let embed = new MessageEmbed()
     .setTitle(`Saved Chat from Ticket ${channel.name}`)
     .setDescription(`Responsible moderator: ${moderator}`)
-    .addFields([
+    .addFields([{
+        name: "Close Reason",
+        value: JSON.parse(channel.topic as string).reason
+    },
       {
         name: "Tags",
         value: `${user.id}, ${user.tag}, ${user.username}, ${displayName}, ${channel.name}`,

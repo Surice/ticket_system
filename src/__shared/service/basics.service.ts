@@ -36,7 +36,8 @@ export async function checkUserResponse(interaction: ButtonInteraction | Command
             resolve(undefined);
         }, 60000);
     });
-    return answer;
+    if(!answer) return;
+    return {text: answer?.text, component: answer?.component};
 }
 
 

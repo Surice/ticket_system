@@ -19,7 +19,7 @@ export const forward: Command = {
         await user.send({embeds: [new MessageEmbed({
             title: "A Support-Ticket was forwarded to you",
             description: `please pay attention on Ticket <#${interaction.channelId}>(${(interaction.channel as TextChannel).name})`,
-            fields: [{name: "User", value: `<@${(interaction.channel as TextChannel).topic}>`},{name: "Forwarded by", value: interaction.user.tag}]
+            fields: [{name: "User", value: `<@${JSON.parse((interaction.channel as TextChannel).topic as string).id}>`},{name: "Forwarded by", value: interaction.user.tag}]
         })]});
 
         replySuccess(`has been forwarded to <@${user.id}>`, "\n", `The ticket`, interaction);

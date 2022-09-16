@@ -13,7 +13,7 @@ import {
   deleteTicketChannel,
 } from "./ticketTool.service";
 import { checkUserResponse } from "../__shared/service/basics.service";
-import { info } from "../__shared/service/logger";
+import { error, info } from "../__shared/service/logger";
 
 let selectedData: { [userId: string]: string } = {};
 
@@ -54,9 +54,9 @@ export async function handleInteractionInput(
     case "closeBtnTicket":
     case "closeBtnTicketConfirm":
       const perms =  await authenticate(interaction.user, interaction.member as GuildMember);
-      let response = await checkUserResponse(interaction, "Solution");
+      let response = await checkUserResponse(interaction, "Please insert Ticket Solution");
       if(!response) return;
-
+    
       info(JSON.stringify(perms), "close tck");
       const close = await closeTicketChannel(interaction.channel as TextChannel, perms, interaction.user.username, interaction.reply, response.text || "unknown");
 
@@ -91,7 +91,7 @@ export async function handleInteractionInput(
               ],
             }),
           ],
-        });
+        }).catch(err => error(err, "send reply"));
 
         let channelName = (interaction.channel as TextChannel).name.split("-");
 
@@ -102,6 +102,21 @@ export async function handleInteractionInput(
           });
         return;
       }
+
+      response.component.reply({
+        embeds: [new MessageEmbed({
+            color: '#34ad4c',
+            description: `**✅ The Ticket has been closed by ${interaction.user.username}** \n\n*Solution: ${response.text}*`
+        })],
+        components: [new MessageActionRow({
+            components: [new MessageButton()
+                .setLabel("Delete")
+                .setEmoji("⛔")
+                .setStyle("DANGER")
+                .setCustomId("TicketTooldelBtnTicket")
+            ]
+        })]
+    }).catch(err => error(err, "reply to ticket close"));
       break;
 
     case "delBtnTicket":
