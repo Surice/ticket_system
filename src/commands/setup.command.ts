@@ -11,7 +11,7 @@ export const setup: Command = {
     requireArgs: false,
     help: "The command to setup the bot configuration",
     method: async function main(interaction: CommandInteraction, perms: Authentication): Promise<void> {
-        let configs: GuildConfigs = JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString());
+        let configs: GuildConfigs = JSON.parse(readFileSync(`${__dirname}/../../data/guildConfigs.json`, "utf-8").toString());
         if(interaction.options.getString('dropdown') == "showConfig") {
             const guildConfig = configs[interaction.guildId || ""];
 
@@ -72,7 +72,7 @@ export const setup: Command = {
                 updates += " Supporter-Roles,";
             }
 
-            writeFileSync('./data/guildConfigs.json', JSON.stringify(configs));
+            writeFileSync(`/data/guildConfigs.json`, JSON.stringify(configs));
 
             interaction.reply(`Successfully updatet${updates}!`);
         }

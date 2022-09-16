@@ -42,7 +42,7 @@ export async function checkUserResponse(interaction: ButtonInteraction | Command
 
 
 export async function fetchGuildconfig(guildId: string): Promise<GuildConfig> {
-    const guildConfigurations: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString()),
+    const guildConfigurations: GuildConfigs = await JSON.parse(readFileSync(`${__dirname}/../../data/guildConfigs.json`, "utf-8").toString()),
         guildConfig: GuildConfig = guildConfigurations[guildId];
 
     if(!guildConfig) guildConfigurations[guildId] = {
@@ -51,8 +51,8 @@ export async function fetchGuildconfig(guildId: string): Promise<GuildConfig> {
     return guildConfig;
 }
 export async function saveGuildConfig(guildConfig: GuildConfig, guildId: string): Promise<void> {
-    let guildConfigurations: GuildConfigs = await JSON.parse(readFileSync('./data/guildConfigs.json', "utf-8").toString());
+    let guildConfigurations: GuildConfigs = await JSON.parse(readFileSync(`${__dirname}/../../data/guildConfigs.json`, "utf-8").toString());
     guildConfigurations[guildId] = guildConfig;
 
-    writeFileSync('./data/guildConfigs.json', JSON.stringify(guildConfigurations));
+    writeFileSync(`${__dirname}/../../data/guildConfigs.json`, JSON.stringify(guildConfigurations));
 }

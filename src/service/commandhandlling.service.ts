@@ -10,7 +10,7 @@ export async function handeCommand(interaction: CommandInteraction): Promise<voi
     if(!interaction.inGuild()) return;
 
     const auth: Authentication = await authenticate(interaction.user, interaction.member as GuildMember);
-    const commandAlasses: {[alias: string]: string} = JSON.parse(readFileSync('./data/commandAliasses.json', "utf-8").toString());
+    const commandAlasses: {[alias: string]: string} = JSON.parse(readFileSync(`${__dirname}/../../data/commandAliasses.json`, "utf-8").toString());
 
     const commandName = (commandAlasses[interaction.commandName]) ? commandAlasses[interaction.commandName] : interaction.commandName;
 

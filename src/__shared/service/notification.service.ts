@@ -44,7 +44,7 @@ export async function replySuccess(subject: string, reason: string, name: string
 }
 
 export function supportNotification(oldState: VoiceState, newState: VoiceState): void {
-    const setup: Setup = JSON.parse(fs.readFileSync('./setup.json', "utf-8").toString());
+    const setup: Setup = JSON.parse(fs.readFileSync(`${__dirname}/../../setup.json`, "utf-8").toString());
     
     if(newState.channelId == setup.supportChannel.channelId) {
         setup.supportChannel.mentions.forEach(async (roleId: string) => {
