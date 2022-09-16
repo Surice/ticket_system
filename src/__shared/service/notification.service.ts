@@ -4,8 +4,8 @@ import { Setup } from '../models/setup.model';
 import { Config } from '../models/config.model';
 import { fetchUser } from './basics.service';
 
-const texts = JSON.parse(fs.readFileSync(`${__dirname}/data/text.json`, "utf-8").toString());
-const config: Config = JSON.parse(fs.readFileSync(`${__dirname}/config.json`, "utf-8").toString());
+const texts = JSON.parse(fs.readFileSync(`${__dirname}/../../../data/text.json`, "utf-8").toString());
+const config: Config = JSON.parse(fs.readFileSync(`${__dirname}/../../../config.json`, "utf-8").toString());
 
 
 export async function adminLog(client: Client, content: string, at: string): Promise<void> {

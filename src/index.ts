@@ -15,7 +15,7 @@ info("loading all dependencies", "startup");
 import { Config } from './__shared/models/config.model';
 import { readFileSync } from 'fs';
 
-const config: Config = JSON.parse(readFileSync(`${__dirname}/config.json`, "utf-8").toString());
+const config: Config = JSON.parse(readFileSync(`${__dirname}/../config.json`, "utf-8").toString());
 export default config;
 
 import { Client, } from "discord.js";
