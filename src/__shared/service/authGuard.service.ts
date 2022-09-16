@@ -5,7 +5,7 @@ import { Config } from '../models/config.model';
 import { GuildConfig, GuildConfigs } from '../models/guildConfigs.model';
 import { fetchGuildconfig } from './basics.service';
 
-const config: Config = JSON.parse(fs.readFileSync('./config.json', "utf-8").toString());
+const config: Config = JSON.parse(fs.readFileSync(`${__dirname}/../../../../config.json`, "utf-8").toString());
 
 export async function authenticate(user: User | PartialUser, member: GuildMember): Promise<Authentication> {
     const guildConfig: GuildConfig = await fetchGuildconfig(member.guild.id);
