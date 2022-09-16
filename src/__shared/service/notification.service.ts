@@ -1,12 +1,11 @@
 import * as fs from 'fs';
-import { Client, CommandInteraction, GuildMember, Interaction, Message, MessageEmbed, ModalSubmitInteraction, PartialMessage, TextChannel, User, VoiceState } from "discord.js";
+import { Client, CommandInteraction, GuildMember, MessageEmbed, ModalSubmitInteraction, PartialMessage, TextChannel, User, VoiceState } from "discord.js";
 import { Setup } from '../models/setup.model';
 import { Config } from '../models/config.model';
-import { supportClient } from '../..';
 import { fetchUser } from './basics.service';
 
-const texts = JSON.parse(fs.readFileSync('./data/text.json', "utf-8").toString());
-const config: Config = JSON.parse(fs.readFileSync('./config.json', "utf-8").toString());
+const texts = JSON.parse(fs.readFileSync(`${__dirname}/data/text.json`, "utf-8").toString());
+const config: Config = JSON.parse(fs.readFileSync(`${__dirname}/config.json`, "utf-8").toString());
 
 
 export async function adminLog(client: Client, content: string, at: string): Promise<void> {
