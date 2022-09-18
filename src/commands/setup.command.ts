@@ -33,11 +33,8 @@ export const setup: Command = {
 
             interaction.reply({embeds: [embed]});
         }else {
-            let updates: string = "";
-            if(!configs[interaction.guildId as string]) configs[interaction.guildId as string] = {
-                ticketId: 0
-            }
-            let gc: GuildConfig = configs[interaction.guildId as string];
+            let updates: string = "",
+                gc: GuildConfig = configs[interaction.guildId as string];
 
             console.log(interaction.options);
 

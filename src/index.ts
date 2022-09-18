@@ -13,13 +13,14 @@ info(`
 
 info("loading all dependencies", "startup");
 import { Config } from './__shared/models/config.model';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 
 const config: Config = JSON.parse(readFileSync(`${__dirname}/../config.json`, "utf-8").toString());
 export default config;
 
-import { Client, } from "discord.js";
+import { Client, Guild, } from "discord.js";
 import { interaction } from "./events/interaction.event";
+import { GuildConfigs } from './__shared/models/guildConfigs.model';
 
 const supportClient: Client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_EMOJIS_AND_STICKERS"], partials: ['MESSAGE', 'REACTION']}),
     supportPrefix = config.prefix;
@@ -35,4 +36,13 @@ supportClient.on('ready', () => {
 });
 
 supportClient.on('interactionCreate', interaction);
-// supportClient.on('messageCreate', message);
+
+supportClient.on('guildCreate', (guild: Guild) => {
+    let configs: GuildConfigs = JSON.parse(readFileSync(`${__dirname}/../data/guildConfigs.json`, "utf-8").toString());
+    
+    if(!configs[guild.id as string]) configs[guild.id as string] = {
+        ticketId: 0
+    }
+
+    writeFileSync(`${__dirname}/../data/guildConfigs.json`, JSON.stringify(configs));
+});
